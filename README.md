@@ -37,3 +37,32 @@ Server-Sent Events (SSE) 是一种服务器推送技术，允许服务器通过H
 5. **前端演示**：
    - 提供简洁的Web界面测试SSE功能
    - 实时显示接收到的事件
+
+## 项目结构
+
+```
+src/main/java/cn/zuster/sse/
+├── SseApplication.java              # 应用程序入口
+├── controller/
+│   └── SseTestController.java       # SSE控制器
+├── exception/
+│   └── SseException.java            # 自定义异常
+├── service/
+│   ├── SseService.java              # SSE服务接口
+│   └── impl/
+│       └── SseServiceImpl.java      # SSE服务实现
+├── session/
+│   └── SseSession.java              # SSE会话管理
+├── task/
+│   ├── AsyncDataTask.java           # 异步数据处理任务
+│   └── HeartBeatTask.java           # 心跳任务
+└── util/
+    └── SseEmitterUTF8.java          # 自定义UTF-8编码的SseEmitter
+```
+
+## 技术栈
+
+- Spring Boot 2.4.1
+- Spring Web
+- Java 8
+- HTML/CSS/JavaScript (前端测试页面)
