@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSE 测试客户端</title>
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --primary-dark: #45a049;
+            --danger-color: #f44336;
+            --danger-dark: #d32f2f;
+            --background-color: #f9f9f9;
+            --border-color: #e0e0e0;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 15px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        h1, h2 {
+            color: #2c3e50;
+            text-align: center;
+            margin: 0 0 15px 0;
+        }
+        
+        h1 {
+            font-size: 24px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        h2 {
+            font-size: 18px;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            gap: 15px;
+            overflow: hidden;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px var(--shadow-color);
+            padding: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .top-card {
+            flex-shrink: 0;
+        }
+        
+        .bottom-card {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .control-panel {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .input-section {
+            display: flex;
+            flex: 1;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .input-group {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .input-group label {
+            margin-right: 8px;
+            font-weight: bold;
+            color: #555;
+            white-space: nowrap;
+        }
+        
+        .input-group input[type="text"] {
+            flex: 1;
+            min-width: 180px;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border 0.2s;
+        }
+        
+        .input-group input[type="text"]:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-left: 10px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 5px;
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary-color);
+        }
+        
+        .checkbox-group label {
+            font-size: 14px;
+            white-space: nowrap;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        button {
+            padding: 8px 15px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        button:hover {
+            background-color: var(--primary-dark);
+            box-shadow: 0 2px 5px var(--shadow-color);
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        button#disconnect {
+            background-color: var(--danger-color);
+        }
+        
+        button#disconnect:hover {
+            background-color: var(--danger-dark);
+        }
+        
+        .events-container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        #events {
+            flex: 1;
+            overflow-y: auto;
+            background-color: #ffffff;
+            border-radius: 4px;
+            padding: 0;
+            font-family: Consolas, monospace;
+            font-size: 14px;
+        }
+        
+        .event {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border-color);
+            line-height: 1.4;
+            transition: background-color 0.2s;
+        }
+        
+        .event:nth-child(odd) {
+            background-color: #f9f9f9;
+        }
+        
+        .event:hover {
+            background-color: #f0f8ff;
+        }
+        
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background-color: #f5f5f5;
+            border-top: 1px solid var(--border-color);
+            color: #666;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        
+        .connection-status {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #ccc;
+            margin-right: 8px;
+        }
+        
+        .connection-status.connected {
+            background-color: #4CAF50;
+        }
+        
+        .clear-btn {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 14px;
+            min-width: auto;
+            padding: 0;
+        }
+        
+        .clear-btn:hover {
+            color: #000;
+            background: none;
+            box-shadow: none;
+            transform: none;
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 600px) {
+            .control-panel {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .input-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .checkbox-group {
+                margin-left: 0;
+                margin-top: 8px;
+            }
+            
+            .buttons {
+                justify-content: center;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Spring Boot SSE 测试客户端</h1>
+        
+        <div class="card top-card">
+            <div class="control-panel">
+                <div class="input-section">
+                    <div class="input-group">
+                        <label for="clientId">用户ID:</label>
+                        <input type="text" id="clientId" placeholder="请输入用户ID">
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="autoClose" checked>
+                        <label for="autoClose">数据接收后自动断开</label>
+                    </div>
+                </div>
+                <div class="buttons">
+                    <button id="connect">连接 SSE</button>
+                    <button id="disconnect" disabled>断开连接</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card bottom-card">
+            <h2>接收到的事件</h2>
+            <div class="events-container">
+                <div id="events"></div>
+                <div class="status-bar">
+                    <div>
+                        <span class="connection-status" id="connectionIndicator"></span>
+                        <span id="connectionStatus">未连接</span>
+                    </div>
+                    <button class="clear-btn" id="clearEvents">清空事件</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let eventSource = null;
+        const eventsContainer = document.getElementById('events');
+        const connectButton = document.getElementById('connect');
+        const disconnectButton = document.getElementById('disconnect');
+        const clientIdInput = document.getElementById('clientId');
+        const autoCloseCheckbox = document.getElementById('autoClose');
+        const connectionIndicator = document.getElementById('connectionIndicator');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const clearEventsButton = document.getElementById('clearEvents');
+        let hasReceivedData = false;
+        
+        function appendEvent(event) {
+            const eventElement = document.createElement('div');
+            eventElement.className = 'event';
+            eventElement.textContent = `${new Date().toLocaleTimeString()}: ${event}`;
+            eventsContainer.appendChild(eventElement);
+            eventsContainer.scrollTop = eventsContainer.scrollHeight;
+        }
+        
+        function updateConnectionStatus(isConnected) {
+            if (isConnected) {
+                connectionIndicator.classList.add('connected');
+                connectionStatus.textContent = '已连接';
+            } else {
+                connectionIndicator.classList.remove('connected');
+                connectionStatus.textContent = '未连接';
+            }
+        }
+        
+        connectButton.addEventListener('click', function() {
+            if (eventSource) {
+                // 如果已有连接，先断开
+                appendEvent('已有连接，正在断开...');
+                disconnect();
+            }
+            
+            const clientId = clientIdInput.value.trim();
+            if (!clientId) {
+                appendEvent('错误: 请输入用户ID');
+                return;
+            }
+            
+            try {
+                appendEvent('正在连接到 SSE 端点...');
+                // 将 clientId 和 autoCloseAfterData 作为参数添加到 SSE URL
+                const autoClose = autoCloseCheckbox.checked;
+                eventSource = new EventSource(`/sse/start?clientId=${encodeURIComponent(clientId)}&autoCloseAfterData=${autoClose}`);
+                
+                eventSource.onopen = function() {
+                    appendEvent('连接已建立');
+                    updateConnectionStatus(true);
+                    connectButton.disabled = true;
+                    disconnectButton.disabled = false;
+                    clientIdInput.disabled = true;
+                    autoCloseCheckbox.disabled = true;
+                };
+                
+                eventSource.onmessage = function(event) {
+                    appendEvent(`收到数据: ${event.data}`);
+                    hasReceivedData = true;
+                    
+                    // 只有当收到的消息包含"end"时才断开连接
+                    if (event.data.includes('end')) {
+                        appendEvent('数据推送完成，断开连接');
+                        disconnect();
+                    } else if (autoCloseCheckbox.checked) {
+                        // 如果启用了自动断开选项，收到任何数据后也断开连接
+                        appendEvent('已收到数据，自动断开连接');
+                        disconnect();
+                    } else {
+                        // 即使不断开连接，也重新启用输入框和按钮
+                        clientIdInput.disabled = false;
+                        // 保持连接按钮禁用，因为连接仍然活跃
+                        autoCloseCheckbox.disabled = false;
+                    }
+                };
+                
+                eventSource.onerror = function(error) {
+                    appendEvent('发生错误');
+                    console.error('EventSource 错误:', error);
+                    disconnect();
+                };
+                
+                // 可选：监听特定命名的事件
+                eventSource.addEventListener('custom-event', function(event) {
+                    appendEvent(`自定义事件: ${event.data}`);
+                });
+                
+            } catch (error) {
+                appendEvent(`连接失败: ${error.message}`);
+                console.error('连接错误:', error);
+            }
+        });
+        
+        disconnectButton.addEventListener('click', disconnect);
+        
+        function disconnect() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+                appendEvent('已断开 SSE 连接');
+                updateConnectionStatus(false);
+                connectButton.disabled = false;
+                disconnectButton.disabled = true;
+                clientIdInput.disabled = false;
+                autoCloseCheckbox.disabled = false;
+            }
+        }
+        
+        clearEventsButton.addEventListener('click', function() {
+            eventsContainer.innerHTML = '';
+            appendEvent('事件已清空');
+        });
+        
+        // 窗口卸载处理器
+        window.addEventListener('beforeunload', function() {
+            if (eventSource) {
+                eventSource.close();
+            }
+        });
+        
+        appendEvent('页面已加载。输入用户ID并点击"连接 SSE"开始接收事件。');
+    </script>
+</body>
+</html> 

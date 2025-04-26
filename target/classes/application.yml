@@ -1,0 +1,16 @@
+server:
+  port: 18081
+spring:
+  profiles:
+    active: dev
+  application:
+    name: ssedemo
+  cloud:
+    nacos:
+      config:
+        server-addr: 172.17.91.226:8848
+        namespace: public
+        group: DEFAULT_GROUP
+        file-extension: yaml
+  config:
+    import: nacos:ssedemo-dev.yaml
